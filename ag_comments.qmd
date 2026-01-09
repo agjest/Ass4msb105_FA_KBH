@@ -1,0 +1,11 @@
+---
+title: "ag comments"
+format: html
+---
+
+## Generelle kommentarer
+
+-   Denne oppgaven løste dere veldig bra!
+-   R koden dere leverer her er MYE bedre, klarere og mer presis, enn den dere brukte i økonometri-innleveringene.
+-   Jeg kommenterte ut `df-print: paged` i YAML headeren siden jeg synes `paged-print = FALSE` (dvs. default console output dor tibbles) er mye mer kompakt og informativ.
+

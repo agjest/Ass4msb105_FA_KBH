@@ -9,7 +9,7 @@ format:
     theme: cosmo
     code-fold: show
     code-tools: true
-    df-print: paged
+    #df-print: paged
     smooth-scroll: true
 editor: visual
 execute:
@@ -19,10 +19,7 @@ execute:
   error: false
 ---
 
-
-
 ```{r}
-
 #| label: setup
 #| message: false
 library(tidyverse)
@@ -35,8 +32,10 @@ library(modelr)
 library(plm)
 library(broom)
 library(sandwich)
-```
+library(kableExtra)
 
+options(paged.print = FALSE)
+```
 
 # Toc.eurostat
 
@@ -63,10 +62,8 @@ gdp_tabs |>
 ```
 
 ```{r}
-
 gdp_id <- gdp_tabs |> slice(1) |> pull(code)   
 gdp_id
-
 ```
 
 ```{r}
@@ -82,7 +79,6 @@ dsd_gdp |>
   width(j = 3, width = 2)
 ```
 
-
 ```{r}
 dsd_gdp |> 
   filter(concept %in% c('geo')) |> 
@@ -92,7 +88,6 @@ dsd_gdp |>
   width(j = 2, width = 2) |> 
   width(j = 3, width = 2)
 ```
-
 
 ```{r}
 # GDP NUTS3 (PPS, EU27=2020), 2000-2023
@@ -135,7 +130,6 @@ gdp |>
   print(n = 25)
 ```
 
-
 ```{r}
 ie_data <- tibble(
   geo = c("IE053", "IE053", "IE053"),
@@ -146,30 +140,22 @@ ie_data <- tibble(
 
 ```{r}
 gdp <- rbind(gdp, ie_data)
-
 ```
-
 
 ```{r}
 gdp <- gdp |>
   arrange(geo, time) |>
   mutate(gdp_n3 = zoo::na.approx(gdp_n3))
-
 ```
 
 ```{r}
 gdp |> filter(geo == "IE053") |> print(n = 25)
-
 ```
-
 
 ```{r}
 gdp <- gdp |> mutate(time = as.integer(time))
 ie_data <- ie_data |> mutate(time = as.integer(time))
-
 ```
-
-
 
 # Population demo_r_pjanaggr3
 
@@ -186,13 +172,10 @@ pop_tabs <- toc_txt |>
   arrange(code)
 
 pop_tabs |> flextable() |> autofit()
-
 ```
-
 
 ```{r}
 pop_tabs |> filter(code == "nama_10r_3popgdp")
-
 ```
 
 # Oppgave 2
@@ -202,12 +185,9 @@ pop_id <- "nama_10r_3popgdp"
 dsd_pop <- get_eurostat_dsd(pop_id)
 
 dsd_pop |> filter(concept %in% c("freq","unit")) |> flextable()
-
-
 ```
 
 ```{r}
-
 pop <- get_eurostat_data(
   id = pop_id,
   filters = list(
@@ -218,30 +198,22 @@ pop <- get_eurostat_data(
   exact_match = FALSE,
   stringsAsFactors = FALSE
 )
-
 ```
-
 
 ```{r}
 pop <- pop |> mutate(time = as.integer(time))
 gdp <- gdp |> mutate(time = as.integer(time))
-
 ```
 
 ```{r}
-
 dsd_pop |>
   filter(concept %in% c("freq", "unit", "geo")) |>
   arrange(concept) |>
   slice(1:20) |>
   flextable()
-
 ```
 
-
-
 ```{r}
-
 pop <- pop |>
   transmute(
     geo,
@@ -253,21 +225,17 @@ pop <- pop |>
 
 dim(pop)
 pop |> print(n = 10)
-
 ```
 
 ```{r}
 dim(pop)
 ```
 
-
-
 ## Oppgave 3
 
 ```{r}
 gdp_pop <- gdp |> 
   left_join(pop, by = c("geo", "time"))
-
 ```
 
 ```{r}
@@ -285,22 +253,17 @@ eu_data <- eu_data |>
   mutate(
     gdp_pc_n3 = gdp_n3 / pop_n3
   )
-
 ```
 
 ```{r}
 eu_data |>
   select(geo, time, gdp_pc_n3) |>
   print(n = 10)
-
 ```
 
 ```{r}
 c(sum(!is.na(eu_data$gdp_pc_n3)), sum(is.na(eu_data$gdp_pc_n3)))
-
 ```
-
-
 
 ```{r}
 miss_by_geo <- eu_data |>
@@ -312,17 +275,12 @@ miss_by_geo <- eu_data |>
   )
 
 c(sum(miss_by_geo$all_missing), sum(miss_by_geo$any_missing))
-
-
 ```
-
-
 
 ```{r}
 # don't run if you don't mean it.
 rm(list = setdiff(ls(), c("eu_data")))
 ```
-
 
 ## Oppgave 4
 
@@ -334,28 +292,26 @@ eu_data <- eu_data |>
     n1 = str_sub(n3, 1, 3),
     nc = str_sub(n3, 1, 2)
   )
-
 ```
 
 ```{r}
 eu_data |> select(nc, n1, n2, n3) |> distinct() |> head(10)
-
 ```
-
 
 ## Opggave 5
 
 ```{r}
-
 sum(eu_data$pop_n3 == 0, na.rm = TRUE)
-
-
-eu_data |> filter(pop_n3 == 0) |> select(n3, time, pop_n3) |> head(20)
-
-
-eu_data <- eu_data |> mutate(pop_n3 = na_if(pop_n3, 0))
-
 ```
+
+```{r}
+eu_data |> filter(pop_n3 == 0) |> select(n3, time, pop_n3) |> head(20)
+```
+
+```{r}
+eu_data <- eu_data |> mutate(pop_n3 = na_if(pop_n3, 0))
+```
+
 
 ## Oppgave 6
 
@@ -368,19 +324,17 @@ nuts3_per_land <- eu_data |>
 nuts3_per_land |>
   flextable() |>
   autofit()
-
 ```
-
 
 ## Oppgave 7
 
 ```{r}
 summary(eu_data$gdp_pc_n3)
-
 ```
 
-Minste verdi er på 2214, som betyr: laveste BNP per capita på NUTS3-nivå i datasettet.Typisk svært lavinntektsregion (ofte øst-/sørøst-Europa). Største verdi er på 180 416, som betyr: Ekstremt høy verdi. Dette kan reflektere til spesielle regioner som (f.eks. Dublin, Luxembourg, finans-/hovedstadsregioner).
-
+Minste verdi er på 2214, som betyr: laveste BNP per capita på NUTS3-nivå i datasettet.Typisk svært lavinntektsregion (ofte øst-/sørøst-Europa).
+Største verdi er på 180 416, som betyr: Ekstremt høy verdi.
+Dette kan reflektere til spesielle regioner som (f.eks. Dublin, Luxembourg, finans-/hovedstadsregioner).
 
 ## Oppgave 8
 
@@ -420,7 +374,6 @@ eu_data <- eu_data |>
       TRUE ~ NA_character_
     )
   )
-
 ```
 
 ```{r}
@@ -447,11 +400,9 @@ gini_n2 <- eu_data |>
 
 ```{r}
 summary(gini_n2)
-
 ```
 
 ## Oppgave 10
-
 
 ```{r}
 gini_n2 |>
@@ -459,12 +410,11 @@ gini_n2 |>
   arrange(num_reg_n2) |>
   select(nc_name, nc, n1, n2, time, gini_n2, num_reg_n2) |>
   print(n = 50)
-
 ```
 
-Observasjoner med Gini-koeffisient lavere enn 0.001 kjennetegnes ved at NUTS2-regionen består av svært få, ofte kun én, underliggende NUTS3-region. I slike tilfeller er Gini-koeffisienten per definisjon nær null, ettersom det ikke foreligger noen regional fordeling av verdiskaping innen regionen. Disse lave Gini-verdiene reflekterer derfor datastrukturen snarere enn reell økonomisk likhet)
-
-
+Observasjoner med Gini-koeffisient lavere enn 0.001 kjennetegnes ved at NUTS2-regionen består av svært få, ofte kun én, underliggende NUTS3-region.
+I slike tilfeller er Gini-koeffisienten per definisjon nær null, ettersom det ikke foreligger noen regional fordeling av verdiskaping innen regionen.
+Disse lave Gini-verdiene reflekterer derfor datastrukturen snarere enn reell økonomisk likhet)
 
 ## Oppagve 11
 
@@ -483,7 +433,6 @@ gini_n1 <- eu_data |>
     num_reg_n1 = n(),
     .groups = "drop"
   )
-
 ```
 
 ```{r}
@@ -510,10 +459,7 @@ gini_nc <- eu_data |>
     num_reg_nc = n(),
     .groups = "drop"
   )
-
 ```
-
-
 
 ```{r}
 gini_nc |> 
@@ -522,9 +468,7 @@ gini_nc |>
   print(width = 80)
 ```
 
-
 # "Nestete" datastrukturer
-
 
 ## Oppgave 13
 
@@ -534,7 +478,6 @@ gini_n3_nest <- eu_data |>
   nest(.key = "NUTS3_data") |> 
   ungroup()
 ```
-
 
 ## Oppgave 14
 
@@ -546,7 +489,6 @@ gini_NUTS2_nest <- gini_n2 |>
 ```
 
 ## Oppgave 15
-
 
 ```{r}
 gini_NUTS1_nest <- gini_n1 |> 
@@ -567,7 +509,6 @@ gini_NUTSc_nest <- gini_nc |>
 ## Oppgave 17
 
 ```{r}
-
 gini_NUTSeu_nest <- eu_data |>
   group_by(time) |>
   summarise(
@@ -575,13 +516,11 @@ gini_NUTSeu_nest <- eu_data |>
     num_reg_eu = dplyr::n(),
     .groups = "drop"
   )
-
 ```
 
 ## Oppgave 18
 
 ```{r}
-
 gini_NUTSeu_nest |>
   ggplot(aes(x = time, y = gini_eu)) +
   geom_line() +
@@ -589,47 +528,48 @@ gini_NUTSeu_nest |>
     x = "Year",
     y = "gini_eu"
   )
-
 ```
-
 
 ## Oppgave 19
 
-Basert på linjeplottet ser det ut til at Gini-koeffisienten for NUTS3-regioner i EU har hatt en svakt fallende trend over tid, særlig fra midten av 2000-tallet og frem mot de siste årene. Dette indikerer at ulikheten i verdiskaping mellom regioner har blitt redusert, om enn gradvis.
+Basert på linjeplottet ser det ut til at Gini-koeffisienten for NUTS3-regioner i EU har hatt en svakt fallende trend over tid, særlig fra midten av 2000-tallet og frem mot de siste årene.
+Dette indikerer at ulikheten i verdiskaping mellom regioner har blitt redusert, om enn gradvis.
 
-Dette kan tolkes som at EUs struktur- og kohesjonsfond, som i stor grad retter seg mot mindre utviklede NUTS2-regioner, kan ha hatt en viss utjevnende effekt. At nedgangen er relativt moderat tyder samtidig på at slike tiltak virker langsomt, og at regionale forskjeller i verdiskaping er seiglivede.
+Dette kan tolkes som at EUs struktur- og kohesjonsfond, som i stor grad retter seg mot mindre utviklede NUTS2-regioner, kan ha hatt en viss utjevnende effekt.
+At nedgangen er relativt moderat tyder samtidig på at slike tiltak virker langsomt, og at regionale forskjeller i verdiskaping er seiglivede.
 
 Samlet sett gir utviklingen støtte til at tiltakene kan bidra til økt regional konvergens, men uten å eliminere regionale forskjeller fullstendig.
-
 
 ## Oppgave 20
 
 ```{r}
-
 eu_data_nested <- gini_n3_nest |>
   left_join(gini_NUTS2_nest, by = c("nc_name", "nc")) |>
   left_join(gini_NUTS1_nest, by = c("nc_name", "nc")) |>
   left_join(gini_NUTSc_nest, by = c("nc_name", "nc"))
+```
 
+```{r}
 # Sjekker at det ser riktig ut
 glimpse(eu_data_nested)
-names(eu_data_nested)
+```
 
+```{r}
+names(eu_data_nested)
 ```
 
 
-# Plots som viser utviklingen 
+# Plots som viser utviklingen
 
 ## Oppgave 21
 
 ```{r}
+#| warning: false
 gini_nc |>
   ggplot(aes(x = time, y = gini_nc, color = nc_name, group = nc_name)) +
   geom_line() +
   labs(x = "time", y = "gini_nc")
-
 ```
-
 
 ## Oppgave 22
 
@@ -638,26 +578,31 @@ gini_2022 <- gini_nc |>
   filter(time == 2022) |>
   select(nc_name, gini_nc) |>
   arrange(desc(gini_nc))
-
 ```
-
 
 ```{r}
 gini_2022
-
 ```
 
 ```{r}
-library(kableExtra)
-
 gini_nc |>
   filter(time == 2022) |>
   select(nc_name, gini_nc) |>
   arrange(desc(gini_nc)) |>
   kable(digits = 7) |>
   kable_styling(full_width = FALSE)
+```
 
-
+```{r}
+# ag; samme gjort i flextable
+gini_nc |>
+  filter(time == 2022) |>
+  select(nc_name, gini_nc) |>
+  arrange(desc(gini_nc)) |>
+  flextable() |> 
+  line_spacing(space = 0.5) |> 
+  colformat_double(digits = 5) |> 
+  autofit()
 ```
 
 
@@ -665,12 +610,10 @@ gini_nc |>
 ## Oppgave 23
 
 ```{r}
-
-library(dplyr)
-library(ggplot2)
-
-
+# ag: same gini_first_last but now without warnings
 gini_first_last <- gini_nc |>
+  # remove those with gini_nc = NaN
+  filter(!is.nan(gini_nc)) |> 
   arrange(nc_name, time) |>
   group_by(nc_name) |>
   summarise(
@@ -679,16 +622,27 @@ gini_first_last <- gini_nc |>
     gini_2022  = gini_nc[time == 2022][1],
     .groups = "drop"
   ) |>
-  
   filter(!is.na(gini_first), !is.na(gini_2022)) |>
-  mutate(group = if_else(gini_2022 < gini_first,
-                         "Lavere regional ulikhet i 2022",
-                         "Høyere regional ulikhet i 2022"))
+  mutate(
+    group = if_else(
+      gini_2022 < gini_first,
+      "Lavere regional ulikhet i 2022",
+      "Høyere regional ulikhet i 2022"
+      )
+    )
+```
 
+
+```{r}
 # Gruppere
 countries_lower <- gini_first_last |> filter(group == "Lavere regional ulikhet i 2022") |> pull(nc_name)
 countries_higher <- gini_first_last |> filter(group == "Høyere regional ulikhet i 2022") |> pull(nc_name)
+```
 
+
+
+
+```{r}
 # Plot 1
 gini_nc |>
   filter(nc_name %in% countries_lower) |>
@@ -700,7 +654,9 @@ gini_nc |>
     y = "gini_nc"
   ) +
   theme_gray()
+```
 
+```{r}
 # Plot 2
 gini_nc |>
   filter(nc_name %in% countries_higher) |>
@@ -712,24 +668,20 @@ gini_nc |>
     y = "gini_nc"
   ) +
   theme_gray()
-
-
 ```
+
 
 
 ## Oppgave 24
 
 ```{r}
-
 gini_n2 |>
   filter(nc == "IE") |>
   ggplot(aes(x = time, y = gini_n2, group = n2, colour = n2)) +
   geom_line() +
   labs(x = "Year", y = "gini_n2") +
   theme_gray()
-
 ```
-
 
 # Hvordan er verdiskapningen fordelt mellom regionene i ulike land?
 
@@ -738,7 +690,7 @@ gini_n2 |>
 ### Oppgave 25
 
 ```{r}
-
+#| warning: false
 gini_n2 |>
   filter(nc == "ES") |>
   ggplot(aes(x = time, y = gini_n2, group = n2, colour = n2)) +
@@ -752,6 +704,7 @@ gini_n2 |>
 ### Oppgave 26
 
 ```{r}
+#| warning: false
 gini_n1 |>
   filter(nc == "ES") |>
   ggplot(aes(x = time, y = gini_n1, group = n1, colour = n1)) +
@@ -762,16 +715,18 @@ gini_n1 |>
 
 ```
 
-Basert på linjeplottet ser vi at enkelte NUTS1-regioner i Spania har hatt en tydelig nedgang i Gini-koeffisienten over tid, noe som indikerer økt regional utjevning. Disse regionene kjennetegnes av en relativt stabil eller fallende ulikhet gjennom perioden, særlig etter finanskrisen rundt 2008–2010. En mulig forklaring kan være at regionene består av færre og mer like NUTS3-regioner, eller at økonomisk vekst og strukturendringer har kommet flere områder innen regionen til gode. I tillegg kan nasjonal og regional politikk, samt overføringer og investeringer, ha bidratt til å redusere interne forskjeller. Samtidig ser vi at andre NUTS1-regioner har hatt mer stabil eller økende ulikhet, noe som tyder på at utviklingen ikke er entydig og varierer betydelig mellom regionene.
-
-
-
+Basert på linjeplottet ser vi at enkelte NUTS1-regioner i Spania har hatt en tydelig nedgang i Gini-koeffisienten over tid, noe som indikerer økt regional utjevning.
+Disse regionene kjennetegnes av en relativt stabil eller fallende ulikhet gjennom perioden, særlig etter finanskrisen rundt 2008–2010.
+En mulig forklaring kan være at regionene består av færre og mer like NUTS3-regioner, eller at økonomisk vekst og strukturendringer har kommet flere områder innen regionen til gode.
+I tillegg kan nasjonal og regional politikk, samt overføringer og investeringer, ha bidratt til å redusere interne forskjeller.
+Samtidig ser vi at andre NUTS1-regioner har hatt mer stabil eller økende ulikhet, noe som tyder på at utviklingen ikke er entydig og varierer betydelig mellom regionene.
 
 ## Tyskland
 
 ### Oppgave 27
 
 ```{r}
+#| warning: false
 gini_n2 |>
   filter(nc == "DE") |>
   ggplot(aes(x = time, y = gini_n2, group = n2)) +
@@ -784,15 +739,17 @@ gini_n2 |>
   theme(legend.position = "none")
 
 ```
-Vi ser at Gini-koeffisientene varierer betydelig mellom NUTS2-regionene i Tyskland, noe som indikerer store regionale forskjeller i hvordan verdiskapingen er fordelt internt i regionene. Regioner med særlig høye Gini-verdier tyder på at verdiskapingen er konsentrert i noen få NUTS3-områder, ofte knyttet til store byregioner og økonomiske sentra. Dette kan for eksempel være regioner som inkluderer storbyer med høy produktivitet og sterke næringsklynger, kombinert med omkringliggende områder med lavere økonomisk aktivitet. Regioner med lavere Gini-verdier fremstår derimot mer homogene, der verdiskapingen er jevnere fordelt mellom underregionene. Dette peker på at de største regionale ulikhetene i Tyskland i stor grad er knyttet til urbanisering og konsentrasjon av økonomisk aktivitet i enkelte deler av landet.
 
-
-
+Vi ser at Gini-koeffisientene varierer betydelig mellom NUTS2-regionene i Tyskland, noe som indikerer store regionale forskjeller i hvordan verdiskapingen er fordelt internt i regionene.
+Regioner med særlig høye Gini-verdier tyder på at verdiskapingen er konsentrert i noen få NUTS3-områder, ofte knyttet til store byregioner og økonomiske sentra.
+Dette kan for eksempel være regioner som inkluderer storbyer med høy produktivitet og sterke næringsklynger, kombinert med omkringliggende områder med lavere økonomisk aktivitet.
+Regioner med lavere Gini-verdier fremstår derimot mer homogene, der verdiskapingen er jevnere fordelt mellom underregionene.
+Dette peker på at de største regionale ulikhetene i Tyskland i stor grad er knyttet til urbanisering og konsentrasjon av økonomisk aktivitet i enkelte deler av landet.
 
 ### Oppgave 28
 
 ```{r}
-
+#| warning: false
 gini_n1 |>
   filter(nc == "DE") |>
   ggplot(aes(x = time, y = gini_n1, group = n1, colour = n1)) +
@@ -800,9 +757,7 @@ gini_n1 |>
   labs(x = "Year", y = "gini_n1") +
   theme_gray() +
   theme(legend.position = "right")
-
 ```
-
 
 ```{r}
 eu_data_nested |> 
@@ -816,13 +771,11 @@ eu_data_nested |>
   colformat_double(j = 2, digits = 4)
 ```
 
-
 ## Frankrike
 
 ### Oppagve 29
 
 ```{r}
-
 gini_n1 |>
   filter(nc == "FR") |>
   ggplot(aes(x = time, y = gini_n1, group = n1, colour = n1)) +
@@ -830,15 +783,11 @@ gini_n1 |>
   labs(x = "Year", y = "gini_n1") +
   theme_gray() +
   theme(legend.position = "right")
-
 ```
-
-
 
 ### Oppgave 30
 
 ```{r}
-
 gini_n1 |>
   filter(nc == "FR", time == 2022) |>
   arrange(desc(gini_n1)) |>
@@ -852,33 +801,46 @@ gini_n1 |>
   ) |>
   flextable::theme_booktabs() |>
   flextable::autofit()
-  
-
-
 ```
 
-Tabellen viser at FR1 (Île-de-France) har suverent høyest Gini-koeffisient blant NUTS1-regionene i Frankrike i 2022. Regionen omfatter Paris og omkringliggende områder, og den høye Gini-verdien indikerer store regionale forskjeller i økonomisk aktivitet. Dette er konsistent med at hovedstadsregioner ofte kombinerer svært produktive sentra med områder som henger etter økonomisk.
-
+Tabellen viser at FR1 (Île-de-France) har suverent høyest Gini-koeffisient blant NUTS1-regionene i Frankrike i 2022.
+Regionen omfatter Paris og omkringliggende områder, og den høye Gini-verdien indikerer store regionale forskjeller i økonomisk aktivitet.
+Dette er konsistent med at hovedstadsregioner ofte kombinerer svært produktive sentra med områder som henger etter økonomisk.
 
 ### Oppgave 31
 
 ```{r}
-
 "gdp_pc_n3" %in% names(eu_data)
+```
 
+```{r}
 fr1_n3 <- eu_data |>
   filter(nc == "FR", n1 == "FR1") |>
   select(time, n3, gdp_pc_n3) |>
   filter(!is.na(gdp_pc_n3))
+```
+
+```{r}
+# ag: blir litt lang. Vil anbefale å lage f.eks for tre år
+fr1_n3 |> 
+  filter(time %in% c(2000, 2011, 2022)) |> 
+  mutate(
+    time = as.character(time)
+    ) |> 
+  flextable() |> 
+  line_spacing(space = 0.2) |> 
+  autofit()
+```
 
 
+```{r}
 ggplot(fr1_n3, aes(x = time, y = gdp_pc_n3, group = n3, colour = n3)) +
   geom_line(alpha = 0.7) +
   labs(x = "Year", y = "gdp_pc_n3") +
   theme_gray()
-
-
 ```
+
+
 
 ```{r}
 
@@ -899,7 +861,6 @@ fr1_table_2022 |>
 
 
 ```
-
 
 ```{r}
 
@@ -935,6 +896,7 @@ knitr::kable(fr1_table_2022,
              caption = "GDP per capita (gdp_pc_n3) for topp 6 NUTS3-soner i FR1 (2022)")
 
 ```
+
 ```{r}
 fr1_table_2022 <- fr1_n3 |>
   filter(time == 2022, n3 %in% top6_n3) |>
@@ -953,14 +915,15 @@ fr1_table_2022 |>
 
 ```
 
-
-
 ### Oppgave 32
 
-Ut fra plottet og tabellen ser vi at FR1 har svært store interne forskjeller i verdiskaping (BNP per innbygger) mellom NUTS3-sonene. To av sonene (f.eks. FR101 og FR105 i vår tabell) ligger ekstremt høyt sammenlignet med resten, mens flere andre soner ligger betydelig lavere og følger en helt annen bane. Dette tyder på at økonomisk aktivitet er svært konsentrert i enkelte deler av regionen, mens andre deler har et lavere nivå. Når enkelte områder drar kraftig fra i verdiskaping, øker spredningen innen regionen, og det er i tråd med at FR1 får en høy Gini-koeffisient. Med andre ord: Den høye Gini-en i FR1 ser ut til å henge sammen med at regionen inneholder både “topper” (svært høy verdiskaping) og “bunn” (langt lavere), altså stor regional ulikhet internt.
+Ut fra plottet og tabellen ser vi at FR1 har svært store interne forskjeller i verdiskaping (BNP per innbygger) mellom NUTS3-sonene.
+To av sonene (f.eks. FR101 og FR105 i vår tabell) ligger ekstremt høyt sammenlignet med resten, mens flere andre soner ligger betydelig lavere og følger en helt annen bane.
+Dette tyder på at økonomisk aktivitet er svært konsentrert i enkelte deler av regionen, mens andre deler har et lavere nivå.
+Når enkelte områder drar kraftig fra i verdiskaping, øker spredningen innen regionen, og det er i tråd med at FR1 får en høy Gini-koeffisient.
+Med andre ord: Den høye Gini-en i FR1 ser ut til å henge sammen med at regionen inneholder både “topper” (svært høy verdiskaping) og “bunn” (langt lavere), altså stor regional ulikhet internt.
 
 # Enkle modeller
-
 
 ## "Data Science" modeller
 
@@ -972,13 +935,11 @@ n3_data <- eu_data_nested |>
   select(nc_name, n2, n3, time, gdp_pc_n3)
 ```
 
-
 ```{r}
 n2_data <- eu_data_nested |> 
   unnest(NUTS2_data) |> 
   select(nc_name, n2, time, gini_n2)
 ```
-
 
 ```{r}
 NUTS2_diff <- n3_data |> 
@@ -1001,8 +962,6 @@ unnest(NUTS2_diff, NUTS2_diff) |>
   nrow()
 ```
 
-
-
 ### Oppgave 34
 
 ```{r}
@@ -1016,8 +975,6 @@ NUTS2_diff <- NUTS2_diff  |>
   )
 ```
 
-
-
 ### Oppgave 35
 
 ```{r}
@@ -1030,7 +987,6 @@ mod_coeff <- NUTS2_diff |>
   )
 
 ```
-
 
 ```{r}
 mod_coeff <- mod_coeff |>
@@ -1054,10 +1010,7 @@ mod_coeff <- mod_coeff |>
 
 ```
 
-
-
 ### Oppgave 36
-
 
 ```{r}
 NUTS2_diff <- NUTS2_diff  |> 
@@ -1072,7 +1025,6 @@ NUTS2_diff <- NUTS2_diff  |>
     )
 ```
 
-
 ```{r}
 library(purrr)
 library(dplyr)
@@ -1084,7 +1036,6 @@ NUTS2_diff <- NUTS2_diff |>
   )
 
 ```
-
 
 ### Oppgave 37
 
@@ -1101,9 +1052,6 @@ NUTS2_diff |>
 
 ```
 
-
-
-
 ### Oppgave 38
 
 ```{r}
@@ -1111,8 +1059,6 @@ mod_coeff_diff <- mod_coeff |>
   filter(term == "diff_gdp_per_capita")
 
 ```
-
-
 
 ```{r}
 nuts1_beta <- mod_coeff_diff |>
@@ -1130,8 +1076,9 @@ nuts1_beta |> slice(1)
 nuts1_beta |> slice(n())
 
 ```
-Basert på gjennomsnittlige koeffisienter for diff_gdp_per_capita på NUTS2-nivå, aggregert til NUTS1-soner, har Bulgaria den høyeste koeffisienten. Dette indikerer at endringer i BNP per innbygger har sterkest sammenheng med den avhengige variabelen i Bulgaria sammenlignet med de øvrige NUTS1-sonene i utvalget.
 
+Basert på gjennomsnittlige koeffisienter for diff_gdp_per_capita på NUTS2-nivå, aggregert til NUTS1-soner, har Bulgaria den høyeste koeffisienten.
+Dette indikerer at endringer i BNP per innbygger har sterkest sammenheng med den avhengige variabelen i Bulgaria sammenlignet med de øvrige NUTS1-sonene i utvalget.
 
 ### Oppgave 39
 
@@ -1154,7 +1101,6 @@ NUTS2_diff |>
 
 ```
 
-
 ### Oppgave 40
 
 ```{r}
@@ -1163,12 +1109,6 @@ NUTS2_diff |>
   names()
 
 ```
-
-
-
-
-
-
 
 ```{r}
 beta_df <- mod_coeff |>
@@ -1194,9 +1134,6 @@ ggplot(beta_df, aes(x = estimate)) +
 
 ```
 
-
-
-
 ### Oppgave 41
 
 ```{r}
@@ -1211,8 +1148,6 @@ res_41 <- mod_coeff |>
 res_41
 
 ```
-
-
 
 ### Oppgave 42
 
@@ -1230,8 +1165,6 @@ paste0("Median: ", format(res_42$median_estimate, scientific = TRUE, digits = 1)
 
 ```
 
-
-
 ### Oppgave 43
 
 ```{r}
@@ -1241,7 +1174,6 @@ x <- mod_coeff |>
   pull(estimate)
 
 ```
-
 
 ```{r}
 t.test(
@@ -1253,7 +1185,6 @@ t.test(
 ```
 
 ## Panel modell
-
 
 ### Oppgave 44
 
@@ -1280,9 +1211,6 @@ p_mod <- plm(
 
 ```
 
-
-
-
 ### Oppgave 45
 
 ```{r}
@@ -1290,17 +1218,17 @@ summary(p_mod)
 
 ```
 
-Resultatet fra panelregresjonen (within-modell med individuelle effekter) viser at diff_gdp_per_capita har en positiv og statistisk signifikant effekt på diff_gini_nuts2. Koeffisienten er positiv, men svært liten i størrelse, og er signifikant på 1 %-nivå (p < 0.001). Dette indikerer at økning i BNP per innbygger er assosiert med en økning i Gini-koeffisienten innen regioner over tid. Forklaringskraften er imidlertid lav (R² ≈ 0.01), noe som tyder på at modellen forklarer en begrenset del av variasjonen i ulikhet.
-
-
+Resultatet fra panelregresjonen (within-modell med individuelle effekter) viser at diff_gdp_per_capita har en positiv og statistisk signifikant effekt på diff_gini_nuts2.
+Koeffisienten er positiv, men svært liten i størrelse, og er signifikant på 1 %-nivå (p \< 0.001).
+Dette indikerer at økning i BNP per innbygger er assosiert med en økning i Gini-koeffisienten innen regioner over tid.
+Forklaringskraften er imidlertid lav (R² ≈ 0.01), noe som tyder på at modellen forklarer en begrenset del av variasjonen i ulikhet.
 
 ### Oppgave 46
 
-I denne chunk-en brukes summary() på panelmodellen p_mod med en robust varians–kovariansmatrise, spesifisert gjennom vcovHC() med metoden "white2". Dette innebærer at standardfeilene beregnes på en måte som er robust mot heteroskedastisitet og mulig korrelasjon i residualene innen panelenhetene.
-Sammenlignet med en ordinær summary(p_mod) er koeffisientestimatene identiske, siden selve regresjonsmodellen ikke endres. Forskjellen ligger i standardfeilene, som i denne alternative metoden er større enn i den ordinære summary()-utskriften. Dette fører til noe lavere t-verdier, men koeffisienten for diff_gdp_per_capita forblir fortsatt sterkt statistisk signifikant.
-Resultatet viser dermed at konklusjonen om en positiv og signifikant sammenheng mellom endringer i BNP per innbygger og endringer i Gini-koeffisienten er robust, også når vi tar hensyn til mulig heteroskedastisitet i dataene. Forklaringskraften (R²) er uendret og fortsatt lav, noe som indikerer at modellen forklarer en begrenset andel av variasjonen i ulikhet.
-
-
-
-
-
+I denne chunk-en brukes summary() på panelmodellen p_mod med en robust varians–kovariansmatrise, spesifisert gjennom vcovHC() med metoden "white2".
+Dette innebærer at standardfeilene beregnes på en måte som er robust mot heteroskedastisitet og mulig korrelasjon i residualene innen panelenhetene.
+Sammenlignet med en ordinær summary(p_mod) er koeffisientestimatene identiske, siden selve regresjonsmodellen ikke endres.
+Forskjellen ligger i standardfeilene, som i denne alternative metoden er større enn i den ordinære summary()-utskriften.
+Dette fører til noe lavere t-verdier, men koeffisienten for diff_gdp_per_capita forblir fortsatt sterkt statistisk signifikant.
+Resultatet viser dermed at konklusjonen om en positiv og signifikant sammenheng mellom endringer i BNP per innbygger og endringer i Gini-koeffisienten er robust, også når vi tar hensyn til mulig heteroskedastisitet i dataene.
+Forklaringskraften (R²) er uendret og fortsatt lav, noe som indikerer at modellen forklarer en begrenset andel av variasjonen i ulikhet.
